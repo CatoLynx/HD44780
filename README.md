@@ -133,10 +133,11 @@ display.clear()
 display.home()
 ```
 
-To display a Yes / No dialog and react to the user's choice on said display, do the following:
+To display a Yes / No dialog and react to the user's choice on said display, using physical keys attached to the Pi, do the following:
 
 ```python
-ui = hd47780.DisplayUI(display)
+INPUT_PINMAP = {} # Your pinmap here
+ui = hd47780.DisplayUI(display, hd47780.GPIOInput, input_kwargs = {'pinmap': INPUT_PINMAP})
 selected_index, selected_text = ui.dialog("Proceed?", buttons = ("Yes", "No"))
 if selected_index == 0:
 	ui.message("Doing stuff...")
@@ -144,5 +145,5 @@ else:
 	ui.message("Aborted.")
 ```
 
-Note that you need to be able to send keypresses to the terminal running the script, or else it won't be able to react to your input.
+Note that if you are using the `SystemInput` input backend you need to be able to send keypresses to the terminal running the script, or else it won't be able to react to your input.
 For more examples I would suggest looking at the included `example.py` file.
