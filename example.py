@@ -9,7 +9,6 @@ import hd47780
 import os
 import psutil
 import time
-from hd47780.utils import KeyReader
 from subprocess import check_output
 
 # K8055
@@ -34,6 +33,29 @@ PINMAP = {
 	'D6': 9,
 	'D7': 11,
 	'LED': 18,
+}
+
+# Arduino
+"""PINMAP = {
+	'RS': 6,
+	'RW': 7,
+	'E': 8,
+	'D4': 13,
+	'D5': 10,
+	'D6': 11,
+	'D7': 12,
+	'LED': 9,
+}"""
+
+# GPIO input module pinmap
+INPUT_PINMAP = {
+	'UP': 23,
+	'LEFT': 7,
+	'OK': 8,
+	'RIGHT': 24,
+	'DOWN': 25,
+	'READY': 27,
+	'ERROR': 22,
 }
 
 CHARMAP = {
@@ -220,8 +242,7 @@ def run():
 	display.set_display_enable(cursor = args.cursor, cursor_blink = args.cursor_blink)
 	display.clear()
 	display.home()
-	key_reader = KeyReader()
-	ui = hd47780.DisplayUI(display, key_reader, debug = True)
+	ui = hd47780.DisplayUI(display, hd47780.GPIOInput, input_kwargs = {'pinmap': INPUT_PINMAP}, debug = True)
 	ui.message(chr(0) + " 2013 Mezgrman\nwww.mezgrman.de", align = 'center', wrap = False, duration = 2.5)
 	
 	try:
@@ -232,7 +253,7 @@ def run():
 					ui.clear()
 					try:
 						while True:
-							char = key_reader.read_key()
+							char = ui.input.read_key()
 							if char:
 								display.write(char)
 					except KeyboardInterrupt:
@@ -301,7 +322,7 @@ def run():
 							ui.message("%s!" % ", ".join([str(item[1]) for item in selected]), align = 'center', duration = 3.0)
 						elif dres[1] == "Custom chars":
 							for i in range(8):
-								ui.message(chr(i) * 16 + "\n" + chr(i) * 16, align = 'center', duration = 0.25)
+								ui.message(chr(i) * 16 + "\n" + chr(i) * 16, align = 'center', duration = 1.0)
 						elif dres[1] == "Back":
 							break
 				elif res[1] == "Settings":
@@ -331,7 +352,7 @@ def run():
 				time.sleep(5)
 		elif args.mode == 'textpad':
 			while True:
-				char = key_reader.read_key()
+				char = ui.input.read_key()
 				if char:
 					display.write(char)
 		elif args.mode == 'text':
@@ -352,6 +373,7 @@ def run():
 	except:
 		raise
 	finally:
+		ui.shutdown()
 		display.shutdown()
 
 run()

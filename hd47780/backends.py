@@ -97,3 +97,45 @@ class GPIOBackend:
 			self.gpio.pwmWrite(self.PIN_LED, level)
 		else:
 			self.gpio.digitalWrite(self.PIN_LED, level > 0)
+
+class ArduinoBackend:
+	def __init__(self, display, pinmap, device = "/dev/ttyACM0", pwm_outputs = [3, 5, 6, 9, 10, 11]):
+		self.display = display
+		try:
+			import serial
+			self.serial = serial.serial_for_url(device, timeout = 0)
+		except:
+			raise IOError("Could not open the Arduino. Make sure you are running as root and are using the correct device name.")
+		
+		self.reverse_pinmap = dict([(value, key) for key, value in pinmap.iteritems()])
+		for pin, output in pinmap.iteritems():
+			setattr(self, 'PIN_%s' % pin, output)
+			if pin == 'LED':
+				self.led_pwm = output in pwm_outputs
+	
+	def high(self, output):
+		self.serial.write("".join(chr(b) for b in [output, 1]))
+	
+	def low(self, output):
+		self.serial.write("".join(chr(b) for b in [output, 0]))
+	
+	def pulse(self, output):
+		self.high(output)
+		self.low(output)
+	
+	def all_low(self):
+		for output in self.reverse_pinmap.keys():
+			self.low(output)
+	
+	def write_nibble(self, nibble, data = True):
+		self.serial.write("".join(chr(b) for b in [self.PIN_RS, int(data), self.PIN_D4, int(nibble[3]), self.PIN_D5, int(nibble[2]), self.PIN_D6, int(nibble[1]), self.PIN_D7, int(nibble[0])]))
+	
+	def set_brightness(self, level):
+		assert level >= 0
+		assert level <= 1023
+		self.display.brightness = level
+		if self.led_pwm:
+			level = int(level * (255.0 / 1023.0))
+			self.serial.write("".join(chr(b) for b in [self.PIN_LED, level]))
+		else:
+			self.serial.write("".join(chr(b) for b in [self.PIN_LED, int(level > 0)]))

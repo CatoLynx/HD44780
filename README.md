@@ -13,42 +13,74 @@ You can easily install the HD47780 lib using the Python Package Index. Just type
 
 Hardware support
 ----------------
-This library supports multiple hardware backends. Currently, the K8055 USB experiment interface board from Velleman and the Raspberry Pi's GPIO pins are supported.
-See the usage examples below for examples on how to use it.
+This library supports multiple hardware platforms for input and output.
 
-Pinmaps
--------
-When instantiating a backend, you need to pass it a dictionary containing a mapping from pin names on the LCD to output numbers on the device you're connecting the LCD to.
+Currently supported output backends:
+* Velleman K8055 USB Experiment Interface Board
+* Raspberry Pi GPIO pins
+* Arduino pins using serial communication (Still in development)
+
+Currently supported input backends:
+* System standard input (Keyboard)
+* Raspberry Pi GPIO pins
+
+See the usage examples below for examples on how to use them.
+
+Output pinmaps
+--------------
+When instantiating a display, you need to pass it a dictionary containing a mapping from pin names on the LCD to output numbers on the device you're connecting the LCD to.
 For a K8055, you might want to use this pinmap:
 
-	PINMAP = {
-		'RS': 1,
-		'RW': 2,
-		'E': 3,
-		'D4': 4,
-		'D5': 5,
-		'D6': 6,
-		'D7': 7,
-		'LED': 9,
-	}
+```python
+PINMAP = {
+	'RS': 1,
+	'RW': 2,
+	'E': 3,
+	'D4': 4,
+	'D5': 5,
+	'D6': 6,
+	'D7': 7,
+	'LED': 9,
+}
+```
 
 Note that the backlight LED pin is numbered 9 here, even though the K8055 only has 8 digital outputs. But since there are two additional analog outputs, I numbered them 9 and 10 to avoid confusion.
 Using an analog output for backlight control enables you to dim the backlight by using PWM!
 
 For a Raspberry Pi, you need to use WiringPi's `WPI_MODE_GPIO` pin numbering scheme. I connected my LCD as follows:
 
-	PINMAP = {
-		'RS': 2,
-		'RW': 3,
-		'E': 4,
-		'D4': 22,
-		'D5': 10,
-		'D6': 9,
-		'D7': 11,
-		'LED': 18,
-	}
+```python
+PINMAP = {
+	'RS': 2,
+	'RW': 3,
+	'E': 4,
+	'D4': 22,
+	'D5': 10,
+	'D6': 9,
+	'D7': 11,
+	'LED': 18,
+}
+```
 
 By using pin 18 for the backlight control, it's once again possible to dim the backlight since this pin is the only available hardware PWM pin of the Pi, so I recommend using this one.
+
+Input pinmaps
+-------------
+If you are using an input module that uses I/O pins, you need to specify a pinmap for that module as well.
+Currently, only five keys are supported: Up, Left, OK, Right and Down, as well as two LEDs: Ready and Error.
+My pinmap looks like this:
+
+```python
+INPUT_PINMAP = {
+	'UP': 23,
+	'LEFT': 7,
+	'OK': 8,
+	'RIGHT': 24,
+	'DOWN': 25,
+	'READY': 27,
+	'ERROR': 22,
+}
+```
 
 Character maps
 --------------
@@ -86,7 +118,7 @@ To use this feature, you need to have the Python Imaging Library (PIL) installed
 User Interface
 --------------
 This library comes with a `DisplayUI` class which allows you to create simple text-based user interfaces with just a few lines of code!
-See the usage examples below.
+See the usage examples below. Have a look at the `lcd.py` file to see what is possible.
 
 Usage examples
 --------------

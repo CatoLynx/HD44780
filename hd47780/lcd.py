@@ -7,6 +7,7 @@ import time
 import warnings
 
 from backends import *
+from inputs import *
 from utils import *
 
 class Display:
@@ -277,16 +278,18 @@ class DisplayUI:
 			self.align = align or self.align
 			self = self.ui.progress_bar(title = self.title, fraction = self.fraction, char = self.char, align = self.align)
 	
-	def __init__(self, display, keyreader = KeyReader(), debug = False):
+	def __init__(self, display, input_module, input_args = (), input_kwargs = {}, debug = False):
 		self.debug = debug
 		self.current_lines = ()
 		self.display = display
 		self.displayed_lines = ()
 		self.h_scroll_pos = 0
-		self.keyreader = keyreader
+		self.input = input_module(self, *input_args, **input_kwargs)
 		self.line_buffer = []
 		self.viewport = ()
 		self.v_scroll_pos = 0
+		self.input.set_error(False)
+		self.input.set_ready(True)
 	
 	def _chunks(self, seq, size):
 		for i in range(0, len(seq), size):
@@ -315,6 +318,10 @@ class DisplayUI:
 			elif align == 'right':
 				aligned_line = line.rjust(width)
 		return aligned_line
+	
+	def shutdown(self):
+		self.input.set_ready(False)
+		self.input.set_error(False)
 	
 	def update(self, lines = None, home = True):
 		if home:
@@ -364,11 +371,18 @@ class DisplayUI:
 		formatted_lines = tuple([self._align(line, align) for line in _lines])
 		return formatted_lines
 	
-	def format_slider(self, minimum, maximum, value, align = 'left', char = "*"):
+	def format_slider(self, minimum, maximum, value, align = 'left', char = "*", fill_char = "-", style = 'slider'):
 		val_width = max(len(str(minimum)), len(str(maximum))) + 1
 		max_slider_width = self.display.column_count - val_width
 		slider_width = int(max_slider_width * float(value) / (maximum - minimum))
-		row = str(value).ljust(val_width) + char * slider_width
+		if style == 'bar':
+			_row = char * slider_width
+		else:
+			_row = [fill_char] * max_slider_width
+			index = int(slider_width * ((max_slider_width - 1) / float(max_slider_width)))
+			_row[index] = char
+			_row = "".join(_row)
+		row = str(value).ljust(val_width) + _row
 		return row
 	
 	def format_multiple_choice_entries(self, entries, align = 'center', active = 0, selected = [], char = "*"):
@@ -393,7 +407,7 @@ class DisplayUI:
 			self.redraw()
 			key = None
 			while key is None:
-				key = self.keyreader.read_key()
+				key = self.input.read_key()
 			if key == self.KEY_LEFT:
 				active = max(0, active - 1)
 			elif key == self.KEY_RIGHT:
@@ -439,7 +453,7 @@ class DisplayUI:
 			first_loop = False
 			key = None
 			while key is None:
-				key = self.keyreader.read_key()
+				key = self.input.read_key()
 			if key == self.KEY_UP:
 				active = max(0, active - 1)
 				if active < self.v_scroll_pos - 1 or (active == 0 and divmod(len(entries), 2)[1] == 0):
@@ -472,7 +486,7 @@ class DisplayUI:
 			self.display.set_cursor_position(0, 1)
 			response = ""
 			while True:
-				key = self.keyreader.read_key()
+				key = self.input.read_key()
 				if key == self.KEY_ENTER:
 					done = True
 					break
@@ -487,18 +501,18 @@ class DisplayUI:
 						warnings.warn("On-Change function of text input element failed", RuntimeWarning)
 		return response
 	
-	def slider_dialog(self, title, minimum = 0, maximum = 100, step = 1, big_step = 10, align = 'left', value = 0, char = "*", onchange = None, onchange_args = (), onchange_kwargs = {}):
+	def slider_dialog(self, title, minimum = 0, maximum = 100, step = 1, big_step = 10, align = 'left', value = 0, char = "*", fill_char = "-", style = 'slider', onchange = None, onchange_args = (), onchange_kwargs = {}):
 		assert value >= minimum
 		assert value <= maximum
 		done = False
 		while not done:
 			title = self._align(title, align)
-			slider_row = self.format_slider(minimum, maximum, value, align = align, char = char)
+			slider_row = self.format_slider(minimum, maximum, value, align = align, char = char, fill_char = fill_char, style = style)
 			self.update((title, slider_row))
 			self.redraw()
 			key = None
 			while key is None:
-				key = self.keyreader.read_key()
+				key = self.input.read_key()
 			if key == self.KEY_LEFT:
 				value = max(value - step, minimum)
 			elif key == self.KEY_RIGHT:
@@ -527,7 +541,7 @@ class DisplayUI:
 			first_loop = False
 			key = None
 			while key is None:
-				key = self.keyreader.read_key()
+				key = self.input.read_key()
 			if key == " ":
 				if active in selected:
 					selected.remove(active)

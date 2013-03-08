@@ -2,7 +2,7 @@
 # See the LICENSE file for the full license.
 
 name = "HD47780"
-version = "1.0.0"
+version = "1.1.0"
 description = "A library for controlling HD47780 compatible character LCDs"
 license = "AGPLv3"
 author = "Julian Metzler"
