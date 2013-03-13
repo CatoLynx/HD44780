@@ -1,6 +1,8 @@
 # Copyright (C) 2013 Julian Metzler
 # See the LICENSE file for the full license.
 
+import sys
+import time
 from utils import *
 
 class K8055Backend:
@@ -139,3 +141,71 @@ class ArduinoBackend:
 			self.serial.write("".join(chr(b) for b in [self.PIN_LED, level]))
 		else:
 			self.serial.write("".join(chr(b) for b in [self.PIN_LED, int(level > 0)]))
+
+class DummyBackend:
+	def __init__(self, display, pinmap, led_pwm = False, delay = 0.01):
+		self.display = display
+		self.led_pwm = led_pwm
+		self.delay = delay
+		self.printed = False
+		self.output_states = [
+			['RS', False],
+			['RW', False],
+			['E', False],
+			['D0', False],
+			['D1', False],
+			['D2', False],
+			['D3', False],
+			['D4', False],
+			['D5', False],
+			['D6', False],
+			['D7', False],
+			['LED', False],
+		]
+		self.pinmap = dict([(key, [_key for _key, value in self.output_states].index(key)) for key, value in pinmap.iteritems()])
+		self.reverse_pinmap = dict([(value, key) for key, value in pinmap.iteritems()])
+		for pin, output in self.pinmap.iteritems():
+			setattr(self, 'PIN_%s' % pin, output)
+		sys.stdout.write("\033[?25l")
+	
+	def _update(self):
+		if not self.printed:
+			sys.stdout.write(" ".join([key.ljust(3) for key, value in self.output_states]) + "\n")
+			self.printed = True
+		sys.stdout.write("\r" + " ".join(["#  " if value else "-  " for key, value in self.output_states]))
+		sys.stdout.flush()
+		time.sleep(self.delay)
+	
+	def high(self, output):
+		self.output_states[output][1] = True
+		self._update()
+	
+	def low(self, output):
+		self.output_states[output][1] = False
+		self._update()
+	
+	def pulse(self, output):
+		self.high(output)
+		self.low(output)
+	
+	def all_low(self):
+		self.output_states = [[key, False] for key, value in self.output_states]
+		self._update()
+	
+	def write_nibble(self, nibble, data = True):
+		self.output_states[self.PIN_RS][1] = data
+		self.output_states[self.PIN_D4][1] = nibble[3]
+		self.output_states[self.PIN_D5][1] = nibble[2]
+		self.output_states[self.PIN_D6][1] = nibble[1]
+		self.output_states[self.PIN_D7][1] = nibble[0]
+		self._update()
+	
+	def set_brightness(self, level):
+		assert level >= 0
+		assert level <= 1023
+		self.display.brightness = level
+		if self.led_pwm:
+			raise NotImplementedError("Later.")
+		else:
+			self.output_states[self.PIN_LED][1] = level > 0
+		self._update()

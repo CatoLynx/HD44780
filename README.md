@@ -19,6 +19,7 @@ Currently supported output backends:
 * Velleman K8055 USB Experiment Interface Board
 * Raspberry Pi GPIO pins
 * Arduino pins using serial communication (Still in development)
+* Dummy output showing the states of the interface pins
 
 Currently supported input backends:
 * System standard input (Keyboard)
@@ -63,6 +64,7 @@ PINMAP = {
 ```
 
 By using pin 18 for the backlight control, it's once again possible to dim the backlight since this pin is the only available hardware PWM pin of the Pi, so I recommend using this one.
+If you are using the `DummyBackend` backend, the pin numbers don't matter.
 
 Input pinmaps
 -------------

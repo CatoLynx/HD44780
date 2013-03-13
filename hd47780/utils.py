@@ -1,10 +1,6 @@
 # Copyright (C) 2013 Julian Metzler
 # See the LICENSE file for the full license.
 
-import sys
-import termios
-import tty
-
 def bool_list_to_mask(list):
 	mask = 0
 	for i in range(len(list)):
