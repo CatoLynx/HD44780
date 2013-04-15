@@ -15,15 +15,17 @@ Hardware support
 ----------------
 This library supports multiple hardware platforms for input and output.
 
-Currently supported output backends:
+Currently available output backends:
 * Velleman K8055 USB Experiment Interface Board
 * Raspberry Pi GPIO pins
 * Arduino pins using serial communication (Still in development)
-* Dummy output showing the states of the interface pins
+* Debug output showing the states of the interface pins
+* Dummy output that does nothing
 
-Currently supported input backends:
-* System standard input (Keyboard)
+Currently available input backends:
+* System standard input (e.g. Keyboard)
 * Raspberry Pi GPIO pins
+* No input
 
 See the usage examples below for examples on how to use them.
 
@@ -64,7 +66,7 @@ PINMAP = {
 ```
 
 By using pin 18 for the backlight control, it's once again possible to dim the backlight since this pin is the only available hardware PWM pin of the Pi, so I recommend using this one.
-If you are using the `DummyBackend` backend, the pin numbers don't matter.
+If you are using the `DebugBackend` backend, the pin numbers don't matter.
 
 Input pinmaps
 -------------
@@ -148,4 +150,4 @@ else:
 ```
 
 Note that if you are using the `SystemInput` input backend you need to be able to send keypresses to the terminal running the script, or else it won't be able to react to your input.
-For more examples I would suggest looking at the included `example.py` file.
+For more examples I would suggest looking at the included example scripts.

@@ -241,7 +241,7 @@ class Display:
 		t = type(data)
 		if t is int:
 			return self.write_value(data)
-		elif t is str or t is unicode:
+		elif t in [str, unicode]:
 			if data.startswith(chr(27)):
 				return self.process_escape_sequence(data)
 			else:
@@ -249,7 +249,7 @@ class Display:
 					return self.process_control_character(data)
 				else:
 					return self.write_string(data, *args, **kwargs)
-		elif t is list or t is tuple:
+		elif t in [list, tuple]:
 			return self.cycle_strings(data, *args, **kwargs)
 		elif t is file:
 			return self.write_string(data.read(), *args, **kwargs)

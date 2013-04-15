@@ -142,7 +142,7 @@ class ArduinoBackend:
 		else:
 			self.serial.write("".join(chr(b) for b in [self.PIN_LED, int(level > 0)]))
 
-class DummyBackend:
+class DebugBackend:
 	def __init__(self, display, pinmap, led_pwm = False, delay = 0.01):
 		self.display = display
 		self.led_pwm = led_pwm
@@ -209,3 +209,31 @@ class DummyBackend:
 		else:
 			self.output_states[self.PIN_LED][1] = level > 0
 		self._update()
+
+class DummyBackend:
+	def __init__(self, display, pinmap):
+		pass
+	
+	def __getattr__(self, descriptor):
+		return None
+	
+	def _update(self):
+		pass
+	
+	def high(self, output):
+		pass
+	
+	def low(self, output):
+		pass
+	
+	def pulse(self, output):
+		pass
+	
+	def all_low(self):
+		pass
+	
+	def write_nibble(self, nibble, data = True):
+		pass
+	
+	def set_brightness(self, level):
+		pass

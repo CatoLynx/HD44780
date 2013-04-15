@@ -123,3 +123,17 @@ class GPIOInput:
 			self.ui.display.backend.high(self.PIN_READY)
 		else:
 			self.ui.display.backend.low(self.PIN_READY)
+
+class NoInput:
+	def __init__(self, ui):
+		pass
+
+	def read_key(self):
+		while True:
+			time.sleep(1)
+	
+	def set_error(self, state):
+		return False
+	
+	def set_ready(self, state):
+		return False
