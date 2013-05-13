@@ -1,4 +1,4 @@
-HD47780 – A library for controlling HD47780 compatible character LCDs
+HD44780 – A library for controlling HD44780 compatible character LCDs
 =====================================================================
 
 License
@@ -7,9 +7,9 @@ This program is licensed under the AGPLv3. See the `LICENSE` file for more infor
 
 Installation
 ------------
-You can easily install the HD47780 lib using the Python Package Index. Just type:
+You can easily install the HD44780 lib using the Python Package Index. Just type:
 
-	sudo pip install hd47780
+	sudo pip install hd44780
 
 Hardware support
 ----------------
@@ -105,7 +105,7 @@ CHARMAP = {
 }
 ```
 
-The keys should be integers from 0 to 7, since the HD47780 can store up to 8 custom characters.
+The keys should be integers from 0 to 7, since the HD44780 can store up to 8 custom characters.
 The values should be tuples or lists of 8 integers, where each integer represents a line of the custom character. I recommend writing these integers in binary notation, since it's easy to see which pixels will be active and which won't if you do it this way.
 
 You can also specify a single key, `dir`, to load custom characters from image files:
@@ -129,9 +129,9 @@ Usage examples
 To initialize a standard 16x2 character LCD with a blinking cursor on a Raspberry Pi, you would do:
 
 ```python
-import hd47780
+import hd44780
 PINMAP = {} # Your pinmap here
-display = hd47780.Display(backend = hd47780.GPIOBackend, pinmap = PINMAP, lines = 2, columns = 16)
+display = hd44780.Display(backend = hd44780.GPIOBackend, pinmap = PINMAP, lines = 2, columns = 16)
 display.set_display_enable(cursor = True, cursor_blink = True)
 display.clear()
 display.home()
@@ -141,7 +141,7 @@ To display a Yes / No dialog and react to the user's choice on said display, usi
 
 ```python
 INPUT_PINMAP = {} # Your pinmap here
-ui = hd47780.DisplayUI(display, hd47780.GPIOInput, input_kwargs = {'pinmap': INPUT_PINMAP})
+ui = hd44780.DisplayUI(display, hd44780.GPIOInput, input_kwargs = {'pinmap': INPUT_PINMAP})
 selected_index, selected_text = ui.dialog("Proceed?", buttons = ("Yes", "No"))
 if selected_index == 0:
 	ui.message("Doing stuff...")
