@@ -5,7 +5,7 @@ import sys
 import time
 from utils import *
 
-class I2CBackend:
+class MCP23017Backend:
 	def __init__(self, display, pinmap, bus = None, port = 0x01, address = 0x20, bank = 'A'):
 		self.display = display
 		self.address = address
