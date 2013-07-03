@@ -9,7 +9,8 @@ class MCP23017Backend:
     def __init__(self, display, pinmap, bus = None, port = 0x01, address = 0x20, bank = 'A'):
         self.display = display
         self.address = address
-        self.bank = bank
+        self.byte = 0
+        self.register = 0x12 if bank == 'A' else 0x13
         if bus:
             self.bus = bus
         else:
@@ -19,44 +20,49 @@ class MCP23017Backend:
             except:
                 raise IOError("Could not establish a connection to the I2C bus.")
 
-        self.bus.write_byte_data(self.address, 0x00 if self.bank == 'A' else 0x01, 0x00)
+        # Set bank to outputs
+        self.bus.write_byte_data(self.address, 0x00 if bank == 'A' else 0x01, 0x00)
         self.reverse_pinmap = dict([(value, key) for key, value in pinmap.iteritems()])
         for pin, output in pinmap.iteritems():
             setattr(self, 'PIN_%s' % pin, output)
 
-    def __digital_write(self, pin, val):
-        register = 0x12 if self.bank == 'A' else 0x13
-        curr = self.bus.read_byte_data(self.address, register)
-        newval = curr | (1 << pin) if val else curr & ~(1 << pin)
-        self.bus.write_byte_data(self.address, register, val)
-
     def high(self, output):
-        self.__digital_write(output, True)
+        self.byte = self.byte | (1 << output)
 
     def low(self, output):
-        self.__digital_write(output, False)
+        self.byte = self.byte & ~(1 << output)
+
+    def set_bit(self, output, value):
+        if value:
+            self.high(output)
+        else:
+            self.low(output)
 
     def pulse(self, output):
         self.high(output)
+        self.bus.write_byte_data(self.address, self.register, self.byte)
+
         self.low(output)
+        self.bus.write_byte_data(self.address, self.register, self.byte)
+        self.byte = self.bus.read_byte_data(self.address, self.register)
 
     def all_low(self):
-        for output in self.reverse_pinmap.keys():
-            self.low(output)
+        self.byte = 0
+        self.bus.write_byte_data(self.address, self.register, self.byte)
 
     def write_nibble(self, nibble, data = True):
-        self.__digital_write(self.PIN_RS, data)
-        self.__digital_write(self.PIN_D4, nibble[3])
-        self.__digital_write(self.PIN_D5, nibble[2])
-        self.__digital_write(self.PIN_D6, nibble[1])
-        self.__digital_write(self.PIN_D7, nibble[0])
+        self.set_bit(self.PIN_RS, data)
+        self.set_bit(self.PIN_D4, nibble[3])
+        self.set_bit(self.PIN_D5, nibble[2])
+        self.set_bit(self.PIN_D6, nibble[1])
+        self.set_bit(self.PIN_D7, nibble[0])
 
     def set_brightness(self, level):
         assert level >= 0
         assert level <= 1023
         self.display.brightness = level
-        self.__digital_write(self.PIN_LED, level > 0)
-
+        self.set_bit(self.PIN_LED, level > 0)
+        self.bus.write_byte_data(self.address, self.register, self.byte)
 
 class K8055Backend:
     def __init__(self, display, pinmap, board = None, port = 0):
